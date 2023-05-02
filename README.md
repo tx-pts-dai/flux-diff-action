@@ -4,6 +4,19 @@ This Github Action runs `flux diff kustomization` and outputs the result in the 
 
 The command `flux diff kustomization` returns all the changes that will be applied at the next flux reconcile. The idea is to run this action when PRs are created having a preview of the differences with the currently deployed resources before merging into `main`.
 
+# Inputs:
+
+```yaml
+  cluster-kustomization-path:
+    description: "Path to the flux kustomization files."
+    required: true
+    default: "clusters/dev/"
+
+  kustomization-directories: # If nothing is passed to this input all folders will be checked
+    description: "List of directories that contain kustomization files that are deployed by flux."
+    required: false
+    default: "__ALL__"
+```
 # Requirements:
 
 - kubectl (configured with a valid kubeconfig)
