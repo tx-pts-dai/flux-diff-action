@@ -58,8 +58,7 @@ In this example several other actions are used to:
 
       - name: Load Kubeconfig
         id: kubeconfig
-        run: |
-          aws eks --region <<my-region>> update-kubeconfig --name <<my-cluster-name>>
+        run: aws eks --region <<my-region>> update-kubeconfig --name <<my-cluster-name>>
 
       - uses: alexellis/setup-arkade@v2
       - uses: alexellis/arkade-get@master
