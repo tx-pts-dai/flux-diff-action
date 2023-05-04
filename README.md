@@ -23,7 +23,7 @@ The command `flux diff kustomization` returns all the changes that will be appli
 - yq
 - flux
 
-# Usage
+# Github Action Usage
 
 ## Basic usage:
 
@@ -58,8 +58,7 @@ In this example several other actions are used to:
 
       - name: Load Kubeconfig
         id: kubeconfig
-        run: |
-          aws eks --region <<my-region>> update-kubeconfig --name <<my-cluster-name>>
+        run: aws eks --region <<my-region>> update-kubeconfig --name <<my-cluster-name>>
 
       - uses: alexellis/setup-arkade@v2
       - uses: alexellis/arkade-get@master
@@ -71,4 +70,17 @@ In this example several other actions are used to:
         with:
           cluster-kustomization-path: clusters/prod
           kustomization-directories: ${{ steps.changed-directories.outputs.all_changed_files }}
+```
+
+# Download and run the flux-diff script locally:
+
+To download the validation script and execute it locally:
+
+```
+curl https://raw.githubusercontent.com/tx-pts-dai/flux-diff-action/main/fluxdiff.sh -o fluxdiff.sh
+chmod +x fluxdiff.sh
+# example 1, look for kustomization files in folders: infrastructure/dev, infrastructure/prod and apps/prod 
+./fluxdiff.sh clusters/dev "infrastructure/dev infrastructure/prod apps/prod"
+# example 2, look for kustomization files in all folders
+./fluxdiff.sh clusters/dev __ALL__
 ```
