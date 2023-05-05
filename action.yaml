@@ -17,5 +17,5 @@ runs:
   steps:
     - run: echo "${{ github.action_path }}" >> $GITHUB_PATH
       shell: bash
-    - run: fluxdiff.sh ${{ inputs.cluster-kustomization-path }} "${{ inputs.kustomization-directories }}"
+    - run: fluxdiff.sh ${{ inputs.cluster-kustomization-path }} "${{ inputs.kustomization-directories }}" >> $GITHUB_STEP_SUMMARY
       shell: bash
