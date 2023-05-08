@@ -15,17 +15,17 @@ for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
     flux diff --timeout 10m0s kustomization $KUSTOMIZATION_NAME --path $KUSTOMIZATION_DIR --kustomization-file $KUSTOMIZATION_FILE --progress-bar=false >> $DIFF_SUMMARY 2>&1 || FLUX_EXITCODE=$?
     if [ $FLUX_EXITCODE -eq 0 ]; then
       echo "No changes detected in the directory $KUSTOMIZATION_DIR" >> $DIFF_SUMMARY
+    elif [ $FLUX_EXITCODE -gt 1 ]; then
+      # Since flux gives an exit code of 1 if there are drifts, we catch any error code lower or equal to 1
+      # and only exit on greater error codes
+      echo "\`\`\`\nError running \`flux diff kustomization\`" >> $DIFF_SUMMARY
+      cat $DIFF_SUMMARY
+      exit $FLUX_EXITCODE
     fi
     echo "\`\`\`" >> $DIFF_SUMMARY
     sed -i.bak 's/, exiting with non-zero exit code//g' $DIFF_SUMMARY # -i.bak for compatibility between linux and mac
   else
     echo "- No changes detected in the directory $KUSTOMIZATION_DIR" >> $DIFF_SUMMARY
-  fi
-  
-  # Since flux gives an exit code of 1 if there are drifts, we catch any error code lower or equal to 1
-  # and only exit on greater error codes
-  if [ $FLUX_EXITCODE -gt 1 ]; then
-    exit $FLUX_EXITCODE
   fi
 done
 
