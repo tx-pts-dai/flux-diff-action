@@ -1,4 +1,7 @@
+DIFF_SUMMARY="/tmp/diff_summary.md"
 KUSTOMIZATION_FILES=$(find $1 -maxdepth 1 -type f -name "*.yaml" -or -name "*.yml")
+
+echo "# Flux Diff Github Action" > $DIFF_SUMMARY
 
 for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
   FLUX_EXITCODE=0
@@ -6,15 +9,24 @@ for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
   KUSTOMIZATION_NAME=$(yq ".metadata.name" $KUSTOMIZATION_FILE)
 
   if [[ $2 == "__ALL__" || $2 == *"${KUSTOMIZATION_DIR:2}"* ]]; then # check if the directory is in the target directories
-    echo "Changes detected in $KUSTOMIZATION_DIR. Computing diff with what's deployed in cluster" >> $GITHUB_STEP_SUMMARY
-    flux diff --timeout 10m0s kustomization $KUSTOMIZATION_NAME --path $KUSTOMIZATION_DIR --kustomization-file $KUSTOMIZATION_FILE --progress-bar=false &>> $GITHUB_STEP_SUMMARY || FLUX_EXITCODE=$?
-  fi
-  
-  # Since flux gives an exit code of 1 if there are drifts, we catch any error code lower or equal to 1
-  # and only exit on greater error codes
-  if [ $FLUX_EXITCODE -gt 1 ]; then
-    exit $FLUX_EXITCODE
-  elif [ $FLUX_EXITCODE -eq 0 ]; then
-    echo "No changes detected in the directory $KUSTOMIZATION_DIR" >> $GITHUB_STEP_SUMMARY
+    echo "- Checking \`$KUSTOMIZATION_DIR\`. Computing diff with what's deployed in cluster" >> $DIFF_SUMMARY
+    # echo "flux diff --timeout 10m0s kustomization $KUSTOMIZATION_NAME --path $KUSTOMIZATION_DIR --kustomization-file $KUSTOMIZATION_FILE --progress-bar=false"
+    echo "\`\`\`" >> $DIFF_SUMMARY
+    flux diff --timeout 10m0s kustomization $KUSTOMIZATION_NAME --path $KUSTOMIZATION_DIR --kustomization-file $KUSTOMIZATION_FILE --progress-bar=false >> $DIFF_SUMMARY 2>&1 || FLUX_EXITCODE=$?
+    if [ $FLUX_EXITCODE -eq 0 ]; then
+      echo "No changes detected in the directory $KUSTOMIZATION_DIR" >> $DIFF_SUMMARY
+    elif [ $FLUX_EXITCODE -gt 1 ]; then
+      # Since flux gives an exit code of 1 if there are drifts, we catch any error code lower or equal to 1
+      # and only exit on greater error codes
+      echo "\`\`\`\nError running \`flux diff kustomization\`" >> $DIFF_SUMMARY
+      cat $DIFF_SUMMARY
+      exit $FLUX_EXITCODE
+    fi
+    echo "\`\`\`" >> $DIFF_SUMMARY
+    sed -i.bak 's/, exiting with non-zero exit code//g' $DIFF_SUMMARY # -i.bak for compatibility between linux and mac
+  else
+    echo "- No changes detected in the directory $KUSTOMIZATION_DIR" >> $DIFF_SUMMARY
   fi
 done
+
+cat $DIFF_SUMMARY

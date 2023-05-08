@@ -77,10 +77,15 @@ In this example several other actions are used to:
 To download the validation script and execute it locally:
 
 ```
-curl https://raw.githubusercontent.com/tx-pts-dai/flux-diff-action/main/fluxdiff.sh -o fluxdiff.sh
+curl https://raw.githubusercontent.com/tx-pts-dai/flux-diff-action/main/fluxdiff.sh -o fluxdiff.sh && \
 chmod +x fluxdiff.sh
-# example 1, look for kustomization files in folders: infrastructure/dev, infrastructure/prod and apps/prod 
-./fluxdiff.sh clusters/dev "infrastructure/dev infrastructure/prod apps/prod"
-# example 2, look for kustomization files in all folders
+```
+## Examples
+1. Look for kustomization files in folders: infrastructure/prod and apps/prod 
+```
+./fluxdiff.sh clusters/prod "infrastructure/prod apps/prod"
+```
+2. Look for kustomization files in all folders
+```
 ./fluxdiff.sh clusters/dev __ALL__
 ```
