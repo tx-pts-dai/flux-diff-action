@@ -11,10 +11,10 @@ The command `flux diff kustomization` returns all the changes that will be appli
     description: "Path to the flux kustomization files."
     required: true
     default: "clusters/dev/"
-
-  kustomization-directories: # If nothing is passed to this input all folders will be checked
-    description: "List of directories that contain kustomization files that are deployed by flux."
-    required: false
+  
+  kustomization-directories:
+    description: 'Directories (space separated) containing kustomization files that are deployed by flux.'
+    required: true
     default: "__ALL__"
 ```
 # Requirements:
