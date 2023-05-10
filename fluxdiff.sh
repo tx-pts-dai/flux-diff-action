@@ -1,5 +1,25 @@
+#!/usr/bin/env bash
+
+# Requirements:
+# - kubectl (configured with a valid kubeconfig)
+# - yq
+# - flux
+
 DIFF_SUMMARY="/tmp/diff_summary.md"
 KUSTOMIZATION_FILES=$(find $1 -maxdepth 1 -type f -name "*.yaml" -or -name "*.yml")
+
+TARGET_DIRECTORIES=""
+for DIRECTORY in $2; do
+  if [[ $DIRECTORY == *"/base" ]]; then
+    MAIN_FOLDER="${DIRECTORY:0:${#DIRECTORY}-5}"
+    OVERLAYS=$(find $1 -maxdepth 1 -type f -name "apps*.yaml" -or -name "apps*.yml")
+
+    for OVERLAY in $OVERLAYS; do
+      OVERLAY_DIR=$(yq ".spec.path" $OVERLAY)
+      TARGET_DIRECTORIES="$TARGET_DIRECTORIES ${OVERLAY_DIR:2}"
+    done
+  fi
+done
 
 echo "# Flux Diff Github Action" > $DIFF_SUMMARY
 
@@ -8,7 +28,7 @@ for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
   KUSTOMIZATION_DIR=$(yq ".spec.path" $KUSTOMIZATION_FILE)
   KUSTOMIZATION_NAME=$(yq ".metadata.name" $KUSTOMIZATION_FILE)
 
-  if [[ $2 == "__ALL__" || $2 == *"${KUSTOMIZATION_DIR:2}"* ]]; then # check if the directory is in the target directories
+  if [[ $2 == "__ALL__" || $TARGET_DIRECTORIES == *"${KUSTOMIZATION_DIR:2}"* ]]; then # check if the directory is in the target directories
     echo "- Checking \`$KUSTOMIZATION_DIR\`. Computing diff with what's deployed in cluster" >> $DIFF_SUMMARY
     # echo "flux diff --timeout 10m0s kustomization $KUSTOMIZATION_NAME --path $KUSTOMIZATION_DIR --kustomization-file $KUSTOMIZATION_FILE --progress-bar=false"
     echo "\`\`\`" >> $DIFF_SUMMARY
@@ -18,7 +38,7 @@ for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
     elif [ $FLUX_EXITCODE -gt 1 ]; then
       # Since flux gives an exit code of 1 if there are drifts, we catch any error code lower or equal to 1
       # and only exit on greater error codes
-      echo "\`\`\`\nError running \`flux diff kustomization\`" >> $DIFF_SUMMARY
+      echo -e "Error running \`flux diff --timeout 10m0s kustomization $KUSTOMIZATION_NAME --path $KUSTOMIZATION_DIR --kustomization-file $KUSTOMIZATION_FILE --progress-bar=false\`" >> $DIFF_SUMMARY
       cat $DIFF_SUMMARY
       exit $FLUX_EXITCODE
     fi
@@ -30,3 +50,4 @@ for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
 done
 
 cat $DIFF_SUMMARY
+rm $DIFF_SUMMARY
