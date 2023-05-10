@@ -12,7 +12,7 @@ TARGET_DIRECTORIES=""
 for DIRECTORY in $2; do
   if [[ $DIRECTORY == *"/base" ]]; then
     MAIN_FOLDER="${DIRECTORY:0:${#DIRECTORY}-5}"
-    OVERLAYS=$(find asd$1 -maxdepth 1 -type f -name "apps*.yaml" -or -name "apps*.yml")
+    OVERLAYS=$(find $1 -maxdepth 1 -type f -name "apps*.yaml" -or -name "apps*.yml")
 
     for OVERLAY in $OVERLAYS; do
       OVERLAY_DIR=$(yq ".spec.path" $OVERLAY)
