@@ -18,11 +18,16 @@ for DIRECTORY in $2; do
       OVERLAY_DIR=$(yq ".spec.path" $OVERLAY)
       TARGET_DIRECTORIES="$TARGET_DIRECTORIES ${OVERLAY_DIR:2}"
     done
+  else
+    # If it's not a base directory, add it to the target
+    TARGET_DIRECTORIES="$TARGET_DIRECTORIES $DIRECTORY"
   fi
 done
 
-echo "# Flux Diff Github Action" > $DIFF_SUMMARY
+# Make sure "$TARGET_DIRECTORIES" has unique values
+TARGET_DIRECTORIES=$(echo "$TARGET_DIRECTORIES" | tr " " "\n" | uniq | tr "\n" " " | xargs)
 
+echo "# Flux Diff on $1" > $DIFF_SUMMARY
 for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
   FLUX_EXITCODE=0
   KUSTOMIZATION_DIR=$(yq ".spec.path" $KUSTOMIZATION_FILE)
@@ -45,7 +50,7 @@ for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
     echo "\`\`\`" >> $DIFF_SUMMARY
     sed -i.bak 's/, exiting with non-zero exit code//g' $DIFF_SUMMARY # -i.bak for compatibility between linux and mac
   else
-    echo "- No changes detected in the directory $KUSTOMIZATION_DIR" >> $DIFF_SUMMARY
+    echo "- Directory \`$KUSTOMIZATION_DIR\` has not been modified." >> $DIFF_SUMMARY
   fi
 done
 
