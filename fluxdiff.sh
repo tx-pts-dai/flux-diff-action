@@ -50,7 +50,7 @@ for KUSTOMIZATION_FILE in $KUSTOMIZATION_FILES; do
     echo "\`\`\`" >> $DIFF_SUMMARY
     sed -i.bak 's/, exiting with non-zero exit code//g' $DIFF_SUMMARY # -i.bak for compatibility between linux and mac
   else
-    echo "- Directory $KUSTOMIZATION_DIR has not been modified." >> $DIFF_SUMMARY
+    echo "- Directory \`$KUSTOMIZATION_DIR\` has not been modified." >> $DIFF_SUMMARY
   fi
 done
 
